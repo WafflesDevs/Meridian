@@ -116,8 +116,20 @@ def get_embeddings() -> OpenAIEmbeddings:
     )
 
 
+def find_pdfs(folder: Path = PDF_FOLDER) -> list[Path]:
+    """List PDFs in a folder, returning an empty list if none / folder missing.
+
+    Non-raising — safe for serve-only environments (e.g. Render) where the PDFs
+    are not shipped and retrieval runs over the existing Supabase index.
+    """
+    if not folder.exists():
+        return []
+    return sorted(folder.glob("*.pdf"))
+
+
 def list_pdfs(folder: Path = PDF_FOLDER) -> list[Path]:
-    paths = sorted(folder.glob("*.pdf"))
+    """Strict variant used where a corpus is genuinely required (CLI ingest)."""
+    paths = find_pdfs(folder)
     if not paths:
         raise FileNotFoundError(f"No PDF files found in {folder.resolve()}")
     return paths
@@ -283,16 +295,28 @@ _pdf_signature: tuple[str, ...] | None = None
 
 
 def get_retriever() -> VectorStoreRetriever:
-    """Ensure DB is up to date, then return a cached retriever."""
+    """Return a cached retriever over the Supabase vector store.
+
+    - If local PDFs exist in data/: ingest any new ones, then build the retriever
+      (preserves the local dev workflow).
+    - If data/ is empty / missing (serve-only prod, e.g. Render): SKIP ingestion
+      and build the retriever directly over the existing Supabase index. Never
+      raises FileNotFoundError.
+    """
     global _retriever, _pdf_signature
 
-    signature = tuple(
-        f"{p.name}:{p.stat().st_size}" for p in list_pdfs(PDF_FOLDER)
-    )
+    pdfs = find_pdfs(PDF_FOLDER)
+    signature = tuple(f"{p.name}:{p.stat().st_size}" for p in pdfs)
     if _retriever is not None and signature == _pdf_signature:
         return _retriever
 
-    store = ingest(PDF_FOLDER)
+    if pdfs:
+        store = ingest(PDF_FOLDER)
+    else:
+        # No local corpus — serve queries straight from the existing Supabase index.
+        print("No local PDFs found; serving from existing Supabase index.")
+        store = make_store()
+
     _retriever = store.as_retriever(search_kwargs={"k": TOP_RESULTS})
     _pdf_signature = signature
     print(f"Retriever ready (top={TOP_RESULTS}).")
