@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { SiteNav } from "../components/SiteNav";
 import { Brand } from "../components/Brand";
+import { Credits } from "../components/Credits";
 import { useAuth } from "../auth/AuthContext";
 
 type Plan = {
@@ -118,6 +119,7 @@ export function Plans() {
             <Link to="/">Home</Link>
             <Link to={startHref}>Assistant</Link>
           </div>
+          <Credits />
         </div>
       </footer>
     </div>

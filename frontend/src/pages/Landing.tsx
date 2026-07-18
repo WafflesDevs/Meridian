@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Brand } from "../components/Brand";
 import { SiteNav } from "../components/SiteNav";
+import { Credits } from "../components/Credits";
 import { checkHealth } from "../api";
 import logo from "../assets/logo.png";
 
@@ -386,6 +387,7 @@ export function Landing() {
             <Link to="/plans">Plans</Link>
             <Link to="/chat">Assistant</Link>
           </div>
+          <Credits />
         </div>
       </footer>
     </div>

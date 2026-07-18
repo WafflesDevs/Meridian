@@ -5,7 +5,16 @@ import { Brand } from "../components/Brand";
 import { checkHealth, fetchSources, sendChat } from "../api";
 import type { Source } from "../api";
 import { useAuth } from "../auth/AuthContext";
+import { Credits } from "../components/Credits";
 import logo from "../assets/logo.png";
+
+function cleanDocName(filename: string): string {
+  let name = filename.replace(/\.pdf$/i, "");
+  name = name.replace(/[-_\s]+web$/i, "");
+  name = name.replace(/[_-]+/g, " ");
+  name = name.replace(/\s+/g, " ").trim();
+  return name || filename;
+}
 
 type Message = {
   id: string;
@@ -108,6 +117,12 @@ export function Chat() {
     }
   }
 
+  function askAboutDocument(name: string) {
+    const clean = cleanDocName(name);
+    setInput(`Give me an overview of what "${clean}" covers.`);
+    textareaRef.current?.focus();
+  }
+
   function onSubmit(e: FormEvent) {
     e.preventDefault();
     void ask(input);
@@ -161,7 +176,16 @@ export function Chat() {
           ) : (
             <ul className="sources-list">
               {sources.map((name) => (
-                <li key={name}>{name}</li>
+                <li key={name}>
+                  <button
+                    type="button"
+                    className="source-item"
+                    onClick={() => askAboutDocument(name)}
+                    title={`Ask about ${cleanDocName(name)}`}
+                  >
+                    {name}
+                  </button>
+                </li>
               ))}
             </ul>
           )}
@@ -278,6 +302,7 @@ export function Chat() {
               documents.
               {threadId ? ` · Thread ${threadId.slice(0, 8)}…` : ""}
             </p>
+            <Credits variant="compact" />
           </div>
         </section>
       </div>
