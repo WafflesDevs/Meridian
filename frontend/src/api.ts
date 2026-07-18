@@ -2,6 +2,11 @@ const API_URL = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
 
 const TOKEN_KEY = "meridian_token";
 
+// Max characters allowed in a single question. Mirrors the backend
+// MAX_PROMPT_CHARS setting (app/core/config.py) so the UI blocks overly long
+// input before it's ever sent.
+export const MAX_PROMPT_CHARS = 800;
+
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
 }

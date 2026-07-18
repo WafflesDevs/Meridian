@@ -55,6 +55,10 @@ class Settings(BaseSettings):
     BUDGET_ENABLED: bool = True
     DAILY_CHAT_LIMIT: int = 200
 
+    # Max characters allowed in a single user question (~200 tokens at 800
+    # chars). Caps input-token cost while still allowing a detailed question.
+    MAX_PROMPT_CHARS: int = 800
+
     @property
     def cors_origins_list(self) -> list[str]:
         raw = self.CORS_ORIGINS.strip()

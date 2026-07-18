@@ -23,10 +23,21 @@ def chat(
 ):
     thread_id = payload.thread_id or str(uuid.uuid4())
 
-    if not payload.userinput.strip():
+    question = payload.userinput.strip()
+    if not question:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Question cannot be empty",
+        )
+
+    # Reject overly long prompts cheaply, BEFORE spending budget / calling the LLM.
+    if len(question) > settings.MAX_PROMPT_CHARS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=(
+                f"Question is too long ({len(question)} characters). "
+                f"Please keep it under {settings.MAX_PROMPT_CHARS} characters."
+            ),
         )
 
     # Global daily spend guardrail (raises 503 once the cap is reached).

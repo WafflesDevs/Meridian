@@ -1681,6 +1681,23 @@ button {
   animation: status-fade 0.35s ease;
 }
 
+.composer-counter {
+  max-width: 820px;
+  margin: 0.3rem auto 0;
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-align: right;
+  padding-right: 0.35rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  transition: color 0.2s ease;
+}
+
+.composer-counter.near-limit {
+  color: var(--danger);
+  font-weight: 600;
+}
+
 .composer-note {
   max-width: 820px;
   margin: 0.65rem auto 0;

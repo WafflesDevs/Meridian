@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { FormEvent, KeyboardEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Brand } from "../components/Brand";
-import { checkHealth, fetchSources, sendChat } from "../api";
+import { checkHealth, fetchSources, sendChat, MAX_PROMPT_CHARS } from "../api";
 import type { Source } from "../api";
 import { useAuth } from "../auth/AuthContext";
 import { Credits } from "../components/Credits";
@@ -284,6 +284,7 @@ export function Chat() {
                 onKeyDown={onKeyDown}
                 placeholder="Ask about a medicine or condition…"
                 rows={2}
+                maxLength={MAX_PROMPT_CHARS}
                 disabled={loading}
               />
               <button
@@ -294,6 +295,14 @@ export function Chat() {
                 Send
               </button>
             </form>
+            <p
+              className={`composer-counter${
+                input.length >= MAX_PROMPT_CHARS * 0.9 ? " near-limit" : ""
+              }`}
+              aria-live="polite"
+            >
+              {input.length} / {MAX_PROMPT_CHARS}
+            </p>
             {loading && statusText ? (
               <p className="composer-status" aria-live="polite">
                 {statusText}
