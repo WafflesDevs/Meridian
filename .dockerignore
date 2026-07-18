@@ -1,0 +1,33 @@
+.git
+.gitignore
+.venv
+venv
+__pycache__
+*.py[cod]
+*.egg-info
+.pytest_cache
+.mypy_cache
+.ruff_cache
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Frontend (built + deployed separately)
+frontend
+
+# Local data / vector caches
+data/*
+!data/.gitkeep
+.chroma
+chroma_db
+
+# Docs / meta
+docs
+README.md
+uv.lock
+
+# OS
+.DS_Store
+Thumbs.db

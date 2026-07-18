@@ -1,0 +1,36 @@
+# Run the full Meridian stack locally: API + frontend.
+# Data (Supabase, OpenAI) stay in the cloud — set them in .env at repo root.
+#
+#   docker compose up --build
+#   API:      http://localhost:8000
+#   Frontend: http://localhost:5173
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    environment:
+      # Allow the containerized frontend origin
+      CORS_ORIGINS: "http://localhost:5173,http://127.0.0.1:5173"
+      PORT: "8000"
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount your local PDFs so the API can ingest them
+      - ./data:/app/data
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: "http://localhost:8000"
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+    restart: unless-stopped

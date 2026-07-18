@@ -1,0 +1,35 @@
+# API
+fastapi
+uvicorn[standard]
+
+# LangChain + OpenAI
+langchain
+langchain-classic
+langchain-core
+langchain-openai
+langchain-community
+langchain-text-splitters
+
+# Vector store (Supabase + pgvector)
+supabase
+
+# Document loading
+pypdf
+pymupdf
+
+# Tracing
+langsmith
+
+# Config
+python-dotenv
+pydantic
+pydantic-settings
+email-validator
+
+# Auth (JWT + password hashing)
+passlib[bcrypt]
+bcrypt>=4.0.1,<4.1
+pyjwt
+
+# Rate limiting
+slowapi

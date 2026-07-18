@@ -1,0 +1,70 @@
+# Render.com blueprint — deploy the Meridian API + frontend together.
+# In Render: New → Blueprint → point at this repo. Fill secret env vars
+# (marked sync: false) in the dashboard after the first deploy.
+
+services:
+  # Backend API (Docker)
+  - type: web
+    name: meridian-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    plan: starter
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_CHAT_MODEL
+        value: gpt-4o-mini
+      - key: OPENAI_EMBEDDING_MODEL
+        value: text-embedding-3-small
+      - key: OPENAI_MAX_TOKENS
+        value: "256"
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SECRET_KEY
+        sync: false
+      - key: decoder
+        value: bcrypt
+      - key: ALGORITHM
+        value: HS256
+      - key: SECERET_KEY
+        generateValue: true
+      - key: ACCESS_TOKEN_EXPIRE
+        value: "60"
+      - key: LANGCHAIN_TRACING_V2
+        value: "false"
+      - key: LANGCHAIN_API_KEY
+        sync: false
+      - key: LANGCHAIN_PROJECT
+        value: myRAG
+      # Set to your frontend URL after it deploys, e.g.
+      # https://meridian-frontend.onrender.com
+      - key: CORS_ORIGINS
+        sync: false
+      # Rate limiting
+      - key: RATE_LIMIT_ENABLED
+        value: "true"
+      - key: CHAT_RATE_LIMIT
+        value: "10/minute;200/day"
+      - key: AUTH_RATE_LIMIT
+        value: "5/minute"
+      # Budget guardrail
+      - key: BUDGET_ENABLED
+        value: "true"
+      - key: DAILY_CHAT_LIMIT
+        value: "200"
+
+  # Frontend (static site built by Vite)
+  - type: web
+    name: meridian-frontend
+    runtime: static
+    buildCommand: cd frontend && npm ci && npm run build
+    staticPublishPath: ./frontend/dist
+    envVars:
+      # Point at the API URL from the service above
+      - key: VITE_API_URL
+        sync: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
