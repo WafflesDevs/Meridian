@@ -9,7 +9,7 @@ services:
     runtime: docker
     dockerfilePath: ./Dockerfile
     healthCheckPath: /health
-    plan: starter
+    plan: free
     envVars:
       - key: OPENAI_API_KEY
         sync: false
