@@ -24,6 +24,26 @@ type Message = {
   sources?: Source[];
 };
 
+// Public source URL for each knowledge-base PDF, keyed by its indexed filename.
+// These are the original open-license sources the corpus was built from, so
+// clicking "view" opens the real document (OpenStax / CDC / WHO / Hesperian).
+const SOURCE_PDF_URLS: Record<string, string> = {
+  "microbiology_-_WEB.pdf":
+    "https://assets.openstax.org/oscms-prodcms/media/documents/microbiology_-_WEB.pdf",
+  "medical-surgical-nursing.pdf":
+    "https://assets.openstax.org/oscms-prodcms/media/documents/Medical-Surgical_Nursing-WEB.pdf",
+  "pharmacology-for-nurses.pdf":
+    "https://assets.openstax.org/oscms-prodcms/media/documents/Pharmacology-WEB.pdf",
+  "nutrition-for-nurses.pdf":
+    "https://assets.openstax.org/oscms-prodcms/media/documents/Nutrition_for_Nurses-WEB.pdf",
+  "cdc-pink-book-vaccine-preventable-diseases.pdf":
+    "https://stacks.cdc.gov/view/cdc/252997/cdc_252997_DS1.pdf",
+  "who-essential-medicines-list-2023.pdf":
+    "https://iris.who.int/server/api/core/bitstreams/289a875c-cc89-4914-90ad-eb3c578ebaf6/content",
+  "where-there-is-no-doctor.pdf":
+    "https://hesperian.org/books-and-resources/where-there-is-no-doctor/",
+};
+
 const SUGGESTIONS = [
   "What is this medicine used for?",
   "What are common side effects?",
@@ -177,18 +197,51 @@ export function Chat() {
             </p>
           ) : (
             <ul className="sources-list">
-              {sources.map((name) => (
-                <li key={name}>
-                  <button
-                    type="button"
-                    className="source-item"
-                    onClick={() => askAboutDocument(name)}
-                    title={`Ask about ${cleanDocName(name)}`}
-                  >
-                    {name}
-                  </button>
-                </li>
-              ))}
+              {sources.map((name) => {
+                const pdfUrl = SOURCE_PDF_URLS[name];
+                return (
+                  <li key={name}>
+                    <div className="source-row">
+                      <button
+                        type="button"
+                        className="source-item"
+                        onClick={() => askAboutDocument(name)}
+                        title={`Ask about ${cleanDocName(name)}`}
+                      >
+                        {name}
+                      </button>
+                      {pdfUrl && (
+                        <a
+                          className="source-view"
+                          href={pdfUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          title={`View "${cleanDocName(name)}" (opens in new tab)`}
+                          aria-label={`View ${cleanDocName(name)} PDF in a new tab`}
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path
+                              d="M14 4h6v6M20 4l-8.5 8.5"
+                              stroke="currentColor"
+                              strokeWidth="1.8"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            <path
+                              d="M18 14v4.5A1.5 1.5 0 0 1 16.5 20h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10"
+                              stroke="currentColor"
+                              strokeWidth="1.8"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </a>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </aside>

@@ -1369,6 +1369,52 @@ button {
   display: block;
 }
 
+.source-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.4rem;
+}
+
+.source-row .source-item {
+  flex: 1;
+  min-width: 0;
+}
+
+.source-view {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-soft);
+  color: var(--muted);
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.source-view:hover {
+  background: var(--surface);
+  border-color: var(--sea);
+  color: var(--sea);
+  transform: translateY(-1px);
+}
+
+.source-view:focus-visible {
+  outline: 2px solid var(--sea);
+  outline-offset: 2px;
+}
+
+.source-view svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
 .source-item {
   display: block;
   width: 100%;
