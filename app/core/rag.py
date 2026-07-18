@@ -164,6 +164,7 @@ def get_llm() -> ChatOpenAI:
         model=settings.OPENAI_CHAT_MODEL,
         api_key=settings.OPENAI_API_KEY,
         temperature=0.2,
+        max_tokens=settings.OPENAI_MAX_TOKENS,
     )
 
 
