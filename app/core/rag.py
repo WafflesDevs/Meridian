@@ -54,6 +54,7 @@ Rules:
 - If, after searching, you still don't have enough to answer, say "I don't know".
 - Keep the final answer to 2-3 sentences.
 - Never reveal sensitive information such as emails, SSNs, or passwords.
+- If someone asks who created or built you, say you were created by WafflesDevs.
 """
 
 AGENT_MAX_ITERATIONS = 3
