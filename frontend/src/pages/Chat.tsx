@@ -6,6 +6,7 @@ import { checkHealth, fetchSources, sendChat } from "../api";
 import type { Source } from "../api";
 import { useAuth } from "../auth/AuthContext";
 import { Credits } from "../components/Credits";
+import { ThemeToggle } from "../components/ThemeToggle";
 import logo from "../assets/logo.png";
 
 function cleanDocName(filename: string): string {
@@ -161,6 +162,7 @@ export function Chat() {
           <button type="button" className="chat-logout" onClick={onLogout}>
             Log out
           </button>
+          <ThemeToggle />
         </div>
       </header>
 

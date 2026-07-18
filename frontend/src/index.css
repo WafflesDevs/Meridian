@@ -1,4 +1,5 @@
 :root {
+  color-scheme: light;
   --ink: #0b1f2a;
   --ink-soft: #1a3544;
   --mist: #e8f3ef;
@@ -13,6 +14,36 @@
   --font-body: "Source Sans 3", "Segoe UI", sans-serif;
   --radius: 18px;
   --max: 1120px;
+
+  /* Semantic surface tokens (themeable) */
+  --surface: #ffffff;
+  --surface-soft: rgba(255, 255, 255, 0.8);
+  --surface-bar: rgba(244, 248, 246, 0.92);
+  --placeholder: rgba(11, 31, 42, 0.4);
+  /* Dark chip / inverted button / user bubble on light UI */
+  --chip: var(--ink);
+  --chip-hover: var(--ink-soft);
+  --chip-text: var(--mist);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #e9f3f0;
+  --ink-soft: #cfe0da;
+  --paper: #0a1620;
+  --sea: #35b6a5;
+  --sea-deep: #6fd8c6;
+  --line: rgba(233, 243, 240, 0.14);
+  --muted: rgba(233, 243, 240, 0.62);
+  --shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+
+  --surface: #12232e;
+  --surface-soft: rgba(233, 243, 240, 0.05);
+  --surface-bar: rgba(9, 19, 27, 0.85);
+  --placeholder: rgba(233, 243, 240, 0.42);
+  --chip: #1c3b49;
+  --chip-hover: #24485a;
+  --chip-text: #e9f3f0;
 }
 
 *,
@@ -34,6 +65,7 @@ body {
   background: var(--paper);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  transition: background 0.25s ease, color 0.25s ease;
 }
 
 button,
@@ -142,7 +174,7 @@ button {
 
 .site-nav-light {
   border-bottom: 1px solid var(--line);
-  background: rgba(244, 248, 246, 0.92);
+  background: var(--surface-bar);
   backdrop-filter: blur(10px);
   position: sticky;
   top: 0;
@@ -164,8 +196,8 @@ button {
 .site-nav-light .nav-cta {
   padding: 0.55rem 0.9rem;
   border-radius: 10px;
-  background: var(--ink);
-  color: var(--mist);
+  background: var(--chip);
+  color: var(--chip-text);
 }
 
 .landing-nav {
@@ -451,12 +483,12 @@ button {
 }
 
 .btn-ink {
-  background: var(--ink);
-  color: var(--mist);
+  background: var(--chip);
+  color: var(--chip-text);
 }
 
 .btn-ink:hover {
-  background: var(--ink-soft);
+  background: var(--chip-hover);
 }
 
 .signal-path {
@@ -507,7 +539,7 @@ button {
   border: 1px solid var(--line);
   border-radius: 20px;
   overflow: hidden;
-  background: var(--paper);
+  background: var(--surface);
   color: var(--ink);
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
   animation: rise-in 0.8s ease both;
@@ -520,7 +552,7 @@ button {
   gap: 1rem;
   padding: 0.95rem 1.15rem;
   border-bottom: 1px solid var(--line);
-  background: rgba(244, 248, 246, 0.96);
+  background: var(--surface-bar);
 }
 
 .demo-chat-top .brand {
@@ -548,7 +580,7 @@ button {
 }
 
 .demo-composer {
-  background: rgba(244, 248, 246, 0.92);
+  background: var(--surface-bar);
 }
 
 .demo-composer .composer-box {
@@ -1026,7 +1058,7 @@ button {
   padding: 0.3rem;
   border-radius: 12px;
   border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--surface-soft);
   gap: 0.25rem;
 }
 
@@ -1040,8 +1072,8 @@ button {
 }
 
 .billing-toggle button.active {
-  background: var(--ink);
-  color: var(--mist);
+  background: var(--chip);
+  color: var(--chip-text);
 }
 
 .billing-toggle em {
@@ -1072,7 +1104,7 @@ button {
   padding: 1.5rem;
   border-radius: 20px;
   border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.72);
+  background: var(--surface-soft);
   transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
@@ -1258,7 +1290,7 @@ button {
   gap: 1rem;
   padding: 1rem 1.25rem;
   border-bottom: 1px solid var(--line);
-  background: rgba(244, 248, 246, 0.85);
+  background: var(--surface-bar);
   backdrop-filter: blur(10px);
   position: sticky;
   top: 0;
@@ -1344,7 +1376,7 @@ button {
   padding: 0.7rem 0.8rem;
   border: 1px solid var(--line);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.55);
+  background: var(--surface-soft);
   color: var(--ink);
   font-family: inherit;
   font-size: 0.92rem;
@@ -1358,7 +1390,7 @@ button {
 }
 
 .source-item:hover {
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--surface);
   border-color: var(--sea);
   transform: translateY(-1px);
   text-decoration: underline;
@@ -1431,13 +1463,13 @@ button {
 }
 
 .message.user .bubble {
-  background: var(--ink);
-  color: var(--mist);
+  background: var(--chip);
+  color: var(--chip-text);
   border-bottom-right-radius: 6px;
 }
 
 .message.assistant .bubble {
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--surface-soft);
   border: 1px solid var(--line);
   border-bottom-left-radius: 6px;
   box-shadow: var(--shadow);
@@ -1570,7 +1602,7 @@ button {
   padding: 0.65rem 0.9rem;
   border-radius: 999px;
   border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--surface-soft);
   color: var(--ink-soft);
   font-size: 0.92rem;
   transition:
@@ -1586,7 +1618,7 @@ button {
 .composer {
   padding: 0.85rem 1.25rem 1.25rem;
   border-top: 1px solid var(--line);
-  background: rgba(244, 248, 246, 0.92);
+  background: var(--surface-bar);
   backdrop-filter: blur(8px);
 }
 
@@ -1600,7 +1632,7 @@ button {
   padding: 0.65rem;
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: #fff;
+  background: var(--surface);
   box-shadow: var(--shadow);
 }
 
@@ -1616,7 +1648,7 @@ button {
 }
 
 .composer textarea::placeholder {
-  color: rgba(11, 31, 42, 0.4);
+  color: var(--placeholder);
 }
 
 .send-btn {
@@ -1828,7 +1860,7 @@ button {
   max-width: 420px;
   padding: 2rem;
   border-radius: var(--radius);
-  background: #fff;
+  background: var(--surface);
   box-shadow: var(--shadow);
 }
 
@@ -1872,7 +1904,7 @@ button {
 }
 
 .auth-tabs button.active {
-  background: #fff;
+  background: var(--surface);
   color: var(--ink);
   box-shadow: 0 2px 8px rgba(11, 31, 42, 0.08);
 }
@@ -1899,7 +1931,7 @@ button {
   padding: 0.75rem 0.85rem;
   border: 1px solid var(--line);
   border-radius: 12px;
-  background: #fff;
+  background: var(--surface);
   color: var(--ink);
   outline: none;
   transition: border-color 0.2s ease;
@@ -2035,4 +2067,44 @@ button {
 .plan-card .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* ——— Theme toggle ——— */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: inherit;
+  background: transparent;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.theme-toggle:hover {
+  border-color: var(--sea);
+  color: var(--sea);
+  transform: translateY(-1px);
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--sea);
+  outline-offset: 2px;
+}
+
+.theme-toggle svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+/* Light nav variant keeps toggle readable on light bar */
+.site-nav-light .theme-toggle {
+  color: var(--muted);
 }

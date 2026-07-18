@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Brand } from "./Brand";
+import { ThemeToggle } from "./ThemeToggle";
 import { useAuth } from "../auth/AuthContext";
 
 type SiteNavProps = {
@@ -43,6 +44,7 @@ export function SiteNav({ variant = "dark" }: SiteNavProps) {
               Log in
             </Link>
           )}
+          <ThemeToggle />
         </div>
       </div>
     </nav>
