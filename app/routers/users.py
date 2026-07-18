@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status, Depends, Request
+from fastapi import APIRouter, HTTPException, status, Depends, Request, Response
 from slowapi.util import get_remote_address
 
 from app.core.rag import get_supabase
@@ -18,7 +18,9 @@ def get_db():
 
 @router.post("/createuser", response_model=ReturnCreate, status_code=status.HTTP_201_CREATED)
 @limiter.limit(settings.AUTH_RATE_LIMIT, key_func=get_remote_address)
-def create_user(request: Request, info: Createuser, db=Depends(get_db)):
+def create_user(
+    request: Request, response: Response, info: Createuser, db=Depends(get_db)
+):
     res = db.table("users").select("*").eq("email", info.email).limit(1).execute()
     if res.data:
         raise HTTPException(
@@ -38,7 +40,9 @@ def create_user(request: Request, info: Createuser, db=Depends(get_db)):
 
 @router.post("/login", status_code=status.HTTP_200_OK, response_model=TokenReturn)
 @limiter.limit(settings.AUTH_RATE_LIMIT, key_func=get_remote_address)
-def login(request: Request, info: LoginUser, db=Depends(get_db)):
+def login(
+    request: Request, response: Response, info: LoginUser, db=Depends(get_db)
+):
     checker = (
         db.table("users")
         .select("id, email, password_hash, role")

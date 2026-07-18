@@ -19,6 +19,22 @@ Meridian is a full-stack **agentic RAG** app: FastAPI backend, Supabase/pgvector
 
 ---
 
+## Screenshots
+
+**Landing**
+
+![Meridian landing page](https://i.postimg.cc/cCX6bpxp/Screenshot-2026-07-17-at-8-12-41-PM.png)
+
+**Login / Sign up**
+
+![Meridian login and sign-up page](https://i.postimg.cc/3xPNVChk/Screenshot-2026-07-17-at-8-14-09-PM.png)
+
+**Chat assistant** (login-gated, grounded answers)
+
+![Meridian chat assistant with knowledge base panel](https://i.postimg.cc/L6QnBF0P/Screenshot-2026-07-17-at-8-13-41-PM.png)
+
+---
+
 ## Features
 
 - **Agentic RAG** — LLM calls a `search_medical_docs` tool (can rephrase / multi-query) before answering  

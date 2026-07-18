@@ -1,17 +1,26 @@
 import uuid
 
-from fastapi import APIRouter, HTTPException, status,Depends
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
 from app.core.rag import rag_answer
 from app.core.memory import add_turn, get_history
 from app.schemas.schemas import ChatInvoke, LLMRes
-from app.core.oauth2 import require_role,get_current_user
+from app.core.oauth2 import require_role
+from app.core.budget import check_and_increment_chat_budget
+from app.core.config import settings
+from app.core.ratelimit import limiter
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
 
 @router.post("", response_model=LLMRes, status_code=status.HTTP_200_OK)
-def chat(payload: ChatInvoke , user: dict = Depends(require_role("Explorer"))):
+@limiter.limit(settings.CHAT_RATE_LIMIT)
+def chat(
+    request: Request,
+    response: Response,
+    payload: ChatInvoke,
+    user: dict = Depends(require_role("Explorer")),
+):
     thread_id = payload.thread_id or str(uuid.uuid4())
 
     if not payload.userinput.strip():
@@ -20,10 +29,15 @@ def chat(payload: ChatInvoke , user: dict = Depends(require_role("Explorer"))):
             detail="Question cannot be empty",
         )
 
+    # Global daily spend guardrail (raises 503 once the cap is reached).
+    check_and_increment_chat_budget()
+
     try:
         history = get_history(thread_id)
         answer = rag_answer(payload.userinput, chat_history=history)
         add_turn(thread_id, payload.userinput, answer)
+    except HTTPException:
+        raise
     except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
