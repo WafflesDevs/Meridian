@@ -24,8 +24,10 @@ RUN mkdir -p data
 
 EXPOSE 8000
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-    CMD curl -fsS http://localhost:8000/health || exit 1
+# Render (and most hosts) inject $PORT; honor it so the container isn't marked
+# unhealthy when the app binds to something other than 8000.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+    CMD curl -fsS "http://localhost:${PORT:-8000}/health" || exit 1
 
 # $PORT is provided by most hosts (Railway/Render/Fly); default to 8000 locally.
 CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
