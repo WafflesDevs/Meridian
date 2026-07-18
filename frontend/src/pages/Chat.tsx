@@ -138,12 +138,6 @@ export function Chat() {
     }
   }
 
-  function askAboutDocument(name: string) {
-    const clean = cleanDocName(name);
-    setInput(`Give me an overview of what "${clean}" covers.`);
-    textareaRef.current?.focus();
-  }
-
   function onSubmit(e: FormEvent) {
     e.preventDefault();
     void ask(input);
@@ -202,21 +196,13 @@ export function Chat() {
                 return (
                   <li key={name}>
                     <div className="source-row">
-                      <button
-                        type="button"
-                        className="source-item"
-                        onClick={() => askAboutDocument(name)}
-                        title={`Ask about ${cleanDocName(name)}`}
-                      >
-                        {name}
-                      </button>
+                      <span className="source-item">{name}</span>
                       {pdfUrl && (
                         <a
                           className="source-view"
                           href={pdfUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
                           title={`View "${cleanDocName(name)}" (opens in new tab)`}
                           aria-label={`View ${cleanDocName(name)} PDF in a new tab`}
                         >
