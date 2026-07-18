@@ -1261,6 +1261,19 @@ button {
   box-shadow: var(--shadow);
 }
 
+.message-sources {
+  margin: 0.4rem 0 0;
+  padding-left: 0.15rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.message-sources-label {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
 .message-label {
   display: block;
   margin-bottom: 0.35rem;

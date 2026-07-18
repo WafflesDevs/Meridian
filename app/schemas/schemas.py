@@ -6,9 +6,16 @@ class ChatInvoke(BaseModel):
     thread_id: str | None = None
 
 
+class Source(BaseModel):
+    filename: str
+    page: int | None = None
+    label: str
+
+
 class LLMRes(BaseModel):
     response: str
     thread_id: str
+    sources: list[Source] = []
 
 class Createuser(BaseModel):
     email: EmailStr

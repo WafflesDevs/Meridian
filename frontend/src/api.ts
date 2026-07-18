@@ -19,9 +19,16 @@ function authHeaders(): Record<string, string> {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+export type Source = {
+  filename: string;
+  page: number | null;
+  label: string;
+};
+
 export type ChatResponse = {
   response: string;
   thread_id: string;
+  sources: Source[];
 };
 
 export type CurrentUser = {

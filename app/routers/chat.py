@@ -34,8 +34,8 @@ def chat(
 
     try:
         history = get_history(thread_id)
-        answer = rag_answer(payload.userinput, chat_history=history)
-        add_turn(thread_id, payload.userinput, answer)
+        result = rag_answer(payload.userinput, chat_history=history)
+        add_turn(thread_id, payload.userinput, result.answer)
     except HTTPException:
         raise
     except Exception:
@@ -44,4 +44,8 @@ def chat(
             detail="Failed to generate answer",
         )
 
-    return LLMRes(response=answer, thread_id=thread_id)
+    return LLMRes(
+        response=result.answer,
+        thread_id=thread_id,
+        sources=result.sources,
+    )

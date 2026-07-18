@@ -3,6 +3,7 @@ import type { FormEvent, KeyboardEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Brand } from "../components/Brand";
 import { checkHealth, fetchSources, sendChat } from "../api";
+import type { Source } from "../api";
 import { useAuth } from "../auth/AuthContext";
 import logo from "../assets/logo.png";
 
@@ -10,6 +11,7 @@ type Message = {
   id: string;
   role: "user" | "assistant";
   content: string;
+  sources?: Source[];
 };
 
 const SUGGESTIONS = [
@@ -93,6 +95,7 @@ export function Chat() {
           id: crypto.randomUUID(),
           role: "assistant",
           content: data.response,
+          sources: data.sources ?? [],
         },
       ]);
       setOnline(true);
@@ -208,6 +211,14 @@ export function Chat() {
                       {msg.role === "user" ? "You" : "Meridian"}
                     </span>
                     <div className="bubble">{msg.content}</div>
+                    {msg.role === "assistant" &&
+                    msg.sources &&
+                    msg.sources.length > 0 ? (
+                      <p className="message-sources">
+                        <span className="message-sources-label">Sources:</span>{" "}
+                        {msg.sources.map((s) => s.label).join(" · ")}
+                      </p>
+                    ) : null}
                   </div>
                 </div>
               ))

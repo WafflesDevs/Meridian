@@ -1,6 +1,9 @@
 """Meridian RAG: ingest PDFs into Supabase, answer via a tool-calling agent."""
 
+import contextvars
+import re
 import time
+from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -54,6 +57,62 @@ Rules:
 """
 
 AGENT_MAX_ITERATIONS = 3
+MAX_SOURCES = 5
+
+# Per-request bucket of Documents that were actually retrieved for the current
+# answer. Set to a fresh list at the start of rag_answer() and appended to inside
+# retrieve_docs(). Using a ContextVar keeps it isolated per request/thread.
+_retrieved_sources: contextvars.ContextVar[list[Document] | None] = (
+    contextvars.ContextVar("retrieved_sources", default=None)
+)
+
+
+@dataclass
+class RagResult:
+    """Answer text plus the structured sources it was grounded in."""
+
+    answer: str
+    sources: list[dict[str, Any]] = field(default_factory=list)
+
+
+def _clean_source_name(filename: str) -> str:
+    """Human-readable document name: drop `.pdf`, underscores, `-WEB` suffix."""
+    stem = Path(str(filename)).stem
+    stem = re.sub(r"[-_\s]+web$", "", stem, flags=re.IGNORECASE)
+    stem = stem.replace("_", " ")
+    stem = " ".join(stem.split()).strip(" -")
+    return stem or Path(str(filename)).stem
+
+
+def _format_source_label(name: str, page: int | None) -> str:
+    return f"{name} — p.{page}" if page is not None else name
+
+
+def collect_sources(docs: list[Document]) -> list[dict[str, Any]]:
+    """Dedupe retrieved docs into a sorted, capped list of structured sources."""
+    seen: set[tuple[str, int | None]] = set()
+    items: list[dict[str, Any]] = []
+    for doc in docs:
+        meta = getattr(doc, "metadata", None) or {}
+        raw_name = meta.get("filename") or meta.get("source")
+        if not raw_name:
+            continue
+        filename = Path(str(raw_name)).name
+        page = meta.get("page")
+        page_num = page + 1 if isinstance(page, int) else None
+        key = (filename, page_num)
+        if key in seen:
+            continue
+        seen.add(key)
+        items.append(
+            {
+                "filename": filename,
+                "page": page_num,
+                "label": _format_source_label(_clean_source_name(filename), page_num),
+            }
+        )
+    items.sort(key=lambda s: (s["filename"], s["page"] if s["page"] is not None else -1))
+    return items[:MAX_SOURCES]
 
 
 class FastSupabaseVectorStore(SupabaseVectorStore):
@@ -331,7 +390,11 @@ def reload_retriever() -> None:
 
 @traceable(name="retrieve_docs")
 def retrieve_docs(question: str) -> list[Document]:
-    return get_retriever().invoke(question)
+    docs = get_retriever().invoke(question)
+    bucket = _retrieved_sources.get()
+    if bucket is not None:
+        bucket.extend(docs)
+    return docs
 
 
 @tool
@@ -365,14 +428,20 @@ def get_agent_executor() -> AgentExecutor:
 @traceable(name="rag_answer")
 def rag_answer(
     question: str,
-    chat_history: list[dict[str, str]] | None = None) -> str:
-    result = get_agent_executor().invoke(
-        {
-            "input": question,
-            "chat_history": format_history(chat_history or []),
-        }
-    )
-    return result["output"]
+    chat_history: list[dict[str, str]] | None = None) -> RagResult:
+    token = _retrieved_sources.set([])
+    try:
+        result = get_agent_executor().invoke(
+            {
+                "input": question,
+                "chat_history": format_history(chat_history or []),
+            }
+        )
+        retrieved = list(_retrieved_sources.get() or [])
+    finally:
+        _retrieved_sources.reset(token)
+
+    return RagResult(answer=result["output"], sources=collect_sources(retrieved))
 
 
 def main() -> None:
