@@ -376,7 +376,16 @@ button {
   font-weight: 600;
   line-height: 0.95;
   letter-spacing: -0.04em;
+  margin: 0 0 0.5rem;
+}
+
+.hero-version {
   margin: 0 0 1.25rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(61, 184, 160, 0.9);
 }
 
 @keyframes hero-status-in {

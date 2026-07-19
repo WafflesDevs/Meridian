@@ -196,6 +196,7 @@ export function Landing() {
               </span>
             </p>
             <h1 className="hero-brand">Meridian</h1>
+            <p className="hero-version">Version 1.2</p>
             <p className="hero-line">
               Grounded answers on medicines and conditions — drawn only from your
               curated medical documents.
