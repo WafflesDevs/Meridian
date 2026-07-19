@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     LANGCHAIN_PROJECT: str = "meridian"
 
     # Models — cheapest sensible defaults to protect the ~$10 OpenAI budget.
-    OPENAI_CHAT_MODEL: str = "gpt-4o-mini"
+    OPENAI_CHAT_MODEL: str = "gpt-4.1-2025-04-14"
     OPENAI_EMBEDDING_MODEL: str = "text-embedding-3-small"
     # Hard cap on tokens generated per answer (keeps output cost predictable).
     OPENAI_MAX_TOKENS: int = 256
