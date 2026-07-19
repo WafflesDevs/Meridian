@@ -14,7 +14,7 @@ services:
       - key: OPENAI_API_KEY
         sync: false
       - key: OPENAI_CHAT_MODEL
-        value: gpt-4.1-2025-04-14
+        value: gpt-4o-mini
       - key: OPENAI_EMBEDDING_MODEL
         value: text-embedding-3-small
       - key: OPENAI_MAX_TOKENS
