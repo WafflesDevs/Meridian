@@ -9,38 +9,80 @@ import creator from "../assets/creator.png";
 
 const FEATURES = [
   {
+    id: "grounded",
+    category: "Safety",
     title: "Answers from your documents only",
     text: "Meridian looks up your curated PDFs — guidelines, labels, handbooks — and refuses to invent facts from the open web.",
+    detail:
+      "Every reply is retrieved from your indexed corpus first. Outside web knowledge is blocked by design, so the assistant stays inside the materials you trust.",
+    icon: "◈",
   },
   {
+    id: "honest",
+    category: "Safety",
     title: "Honest when the evidence isn’t there",
     text: "If your corpus doesn’t cover the question, it says “I don’t know” instead of guessing. Safer for clinical reference.",
+    detail:
+      "When retrieval comes back empty or weak, Meridian refuses to invent an answer. That honesty is the point — better a clear gap than a confident hallucination.",
+    icon: "◎",
   },
   {
+    id: "agentic",
+    category: "Reasoning",
     title: "Thinks before it answers",
     text: "It searches your library first, can rephrase a question and search again, then replies only from what it actually found.",
+    detail:
+      "An agentic RAG loop decides when to search, can reformulate the query, and only drafts after evidence lands — like a careful research pass, not a one-shot autocomplete.",
+    icon: "⟳",
   },
   {
+    id: "multipart",
+    category: "Reasoning",
     title: "Handles multi-part clinical questions",
     text: "Ask about dosing and side effects in one go — Meridian looks up each part separately so nothing important gets skipped.",
+    detail:
+      "Compound questions are broken into lookups so dosing, contraindications, and monitoring each get their own pass through the knowledge base.",
+    icon: "⊞",
   },
   {
+    id: "thread",
+    category: "Workflow",
     title: "Follow-ups that feel like a consult",
     text: "“What about in renal impairment?” stays in the same thread. No need to restate the whole case every time.",
+    detail:
+      "Thread memory keeps context across turns, so clarifying questions feel like a consult — not a cold restart of the case each time.",
+    icon: "⇄",
   },
   {
+    id: "citations",
+    category: "Workflow",
     title: "Grounded in the page, not vibes",
     text: "Every lookup is tied back to passages in your indexed materials, so answers stay anchored to real source text.",
+    detail:
+      "Cited sources show document + page under each answer so you can jump back to the passage and verify before you act on it.",
+    icon: "¶",
   },
   {
+    id: "corpus",
+    category: "Corpus",
     title: "Built for dense medical PDFs",
     text: "Long textbooks and product inserts are broken into searchable passages — so you get the right section, not a random page.",
+    detail:
+      "Chunking + vector search over nursing, pharmacology, CDC, and WHO references turns thousand-page PDFs into precise, retrievable passages.",
+    icon: "▣",
   },
   {
+    id: "desk",
+    category: "Corpus",
     title: "Calm desk-side interface",
     text: "A quiet chat workspace designed for serious reference work — not a flashy consumer chatbot.",
+    detail:
+      "The clinical desk UI keeps saved consultations, knowledge-base links, and grounded replies in one focused workspace — built for desk-side use.",
+    icon: "✚",
   },
 ];
+
+const FEATURE_CATEGORIES = ["All", "Safety", "Reasoning", "Workflow", "Corpus"] as const;
 
 const STEPS = [
   {
@@ -86,6 +128,18 @@ export function Landing() {
   const [statusReady, setStatusReady] = useState(false);
   const [demoStatus, setDemoStatus] = useState(DEMO_STATUS[0]);
   const [demoTyping, setDemoTyping] = useState(false);
+  const [featureCategory, setFeatureCategory] =
+    useState<(typeof FEATURE_CATEGORIES)[number]>("All");
+  const [activeFeatureId, setActiveFeatureId] = useState(FEATURES[0].id);
+
+  const filteredFeatures =
+    featureCategory === "All"
+      ? FEATURES
+      : FEATURES.filter((f) => f.category === featureCategory);
+  const activeFeature =
+    filteredFeatures.find((f) => f.id === activeFeatureId) ??
+    filteredFeatures[0] ??
+    FEATURES[0];
 
   useEffect(() => {
     let cancelled = false;
@@ -196,7 +250,7 @@ export function Landing() {
               </span>
             </p>
             <h1 className="hero-brand">Meridian</h1>
-            <p className="hero-version">Version 1.4</p>
+            <p className="hero-version">Version 1.5</p>
             <p className="hero-line">
               Grounded answers on medicines and conditions — drawn only from your
               curated medical documents.
@@ -316,16 +370,77 @@ export function Landing() {
           <h2>Features</h2>
           <p className="features-lead">
             Built for clinicians and learners who need trustworthy answers from
-            documents they already trust.
+            documents they already trust. Click a capability to explore it.
           </p>
-          <ul className="features-grid">
-            {FEATURES.map((feature) => (
-              <li key={feature.title}>
-                <h3>{feature.title}</h3>
-                <p>{feature.text}</p>
-              </li>
+
+          <div
+            className="feature-tabs"
+            role="tablist"
+            aria-label="Feature categories"
+          >
+            {FEATURE_CATEGORIES.map((cat) => (
+              <button
+                key={cat}
+                type="button"
+                role="tab"
+                aria-selected={featureCategory === cat}
+                className={`feature-tab ${featureCategory === cat ? "is-active" : ""}`}
+                onClick={() => {
+                  setFeatureCategory(cat);
+                  const next =
+                    cat === "All"
+                      ? FEATURES[0]
+                      : FEATURES.find((f) => f.category === cat);
+                  if (next) setActiveFeatureId(next.id);
+                }}
+              >
+                {cat}
+              </button>
             ))}
-          </ul>
+          </div>
+
+          <div className="feature-explorer">
+            <ul className="feature-rail" role="list">
+              {filteredFeatures.map((feature) => (
+                <li key={feature.id}>
+                  <button
+                    type="button"
+                    className={`feature-rail-item ${
+                      activeFeature.id === feature.id ? "is-active" : ""
+                    }`}
+                    onClick={() => setActiveFeatureId(feature.id)}
+                    onMouseEnter={() => setActiveFeatureId(feature.id)}
+                    aria-pressed={activeFeature.id === feature.id}
+                  >
+                    <span className="feature-rail-icon" aria-hidden>
+                      {feature.icon}
+                    </span>
+                    <span className="feature-rail-copy">
+                      <span className="feature-rail-cat">{feature.category}</span>
+                      <span className="feature-rail-title">{feature.title}</span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+
+            <div
+              className="feature-spotlight"
+              key={activeFeature.id}
+              aria-live="polite"
+            >
+              <span className="feature-spotlight-icon" aria-hidden>
+                {activeFeature.icon}
+              </span>
+              <p className="feature-spotlight-cat">{activeFeature.category}</p>
+              <h3>{activeFeature.title}</h3>
+              <p className="feature-spotlight-lead">{activeFeature.text}</p>
+              <p className="feature-spotlight-detail">{activeFeature.detail}</p>
+              <Link className="btn btn-primary feature-spotlight-cta" to="/chat">
+                Try this in chat
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
 
