@@ -103,7 +103,16 @@ export function Chat() {
   const [online, setOnline] = useState(false);
   const [sources, setSources] = useState<string[]>([]);
   const [kbOpen, setKbOpen] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() =>
+    typeof window !== "undefined"
+      ? window.matchMedia("(min-width: 901px)").matches
+      : true,
+  );
+  const [isDesktop, setIsDesktop] = useState(() =>
+    typeof window !== "undefined"
+      ? window.matchMedia("(min-width: 901px)").matches
+      : true,
+  );
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [limitHint, setLimitHint] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -120,6 +129,12 @@ export function Chat() {
     saveChats(next);
   }, []);
 
+  const closeSidebarOnMobile = useCallback(() => {
+    if (!window.matchMedia("(min-width: 901px)").matches) {
+      setSidebarOpen(false);
+    }
+  }, []);
+
   function onLogout() {
     logout();
     navigate("/login", { replace: true });
@@ -132,6 +147,7 @@ export function Chat() {
       setActiveId(empty.id);
       setActiveChatId(empty.id);
       setError(null);
+      closeSidebarOnMobile();
       return;
     }
     if (chats.length >= MAX_SAVED_CHATS) {
@@ -146,6 +162,7 @@ export function Chat() {
     setActiveChatId(chat.id);
     setError(null);
     setInput("");
+    closeSidebarOnMobile();
   }
 
   function selectChat(id: string) {
@@ -153,6 +170,7 @@ export function Chat() {
     setActiveId(id);
     setActiveChatId(id);
     setError(null);
+    closeSidebarOnMobile();
   }
 
   function removeChat(id: string) {
@@ -171,6 +189,18 @@ export function Chat() {
     fetchSources()
       .then(setSources)
       .catch(() => setSources([]));
+  }, []);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 901px)");
+    const sync = () => {
+      const desktop = mq.matches;
+      setIsDesktop(desktop);
+      setSidebarOpen(desktop);
+    };
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
   }, []);
 
   useEffect(() => {
@@ -305,7 +335,12 @@ export function Chat() {
         <div className="clinic-meta">
           <span className={`vitals-pill ${online ? "is-live" : ""}`}>
             <i />
-            {online ? "Vitals stable · online" : "Connecting…"}
+            <span className="vitals-full">
+              {online ? "Vitals stable · online" : "Connecting…"}
+            </span>
+            <span className="vitals-short">
+              {online ? "Online" : "…"}
+            </span>
           </span>
           {user && (
             <span className="chat-user" title={user.user_id}>
@@ -315,10 +350,10 @@ export function Chat() {
               <span className="chat-user-role">{user.role}</span>
             </span>
           )}
-          <Link className="nav-link clinic-nav" to="/plans">
+          <Link className="nav-link clinic-nav clinic-nav-text" to="/plans">
             Plans
           </Link>
-          <Link className="nav-link clinic-nav" to="/">
+          <Link className="nav-link clinic-nav clinic-nav-text" to="/">
             Home
           </Link>
           <button type="button" className="chat-logout" onClick={onLogout}>
@@ -328,7 +363,17 @@ export function Chat() {
         </div>
       </header>
 
-      <div className={`clinic-shell ${sidebarOpen ? "" : "sidebar-collapsed"}`}>
+      <div
+        className={`clinic-shell ${sidebarOpen ? "" : "sidebar-collapsed"}`}
+      >
+        {!isDesktop && sidebarOpen && (
+          <button
+            type="button"
+            className="clinic-sidebar-backdrop"
+            aria-label="Close chat list"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
         <aside className="clinic-sidebar" aria-label="Saved consultations">
           <button
             type="button"
