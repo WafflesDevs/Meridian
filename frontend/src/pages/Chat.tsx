@@ -204,6 +204,26 @@ export function Chat() {
   }, []);
 
   useEffect(() => {
+    if (isDesktop || !sidebarOpen) {
+      document.body.style.overflow = "";
+      return;
+    }
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isDesktop, sidebarOpen]);
+
+  useEffect(() => {
+    if (isDesktop || !sidebarOpen) return;
+    const onKey = (e: globalThis.KeyboardEvent) => {
+      if (e.key === "Escape") setSidebarOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isDesktop, sidebarOpen]);
+
+  useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading, statusText]);
 
