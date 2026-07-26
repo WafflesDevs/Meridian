@@ -9,17 +9,25 @@ from app.core.config import settings
 bearer = HTTPBearer()
 
 
-def create_access_token(user_id: str, role: str) -> dict:
+def create_access_token(user_id: str, role: str, email: str) -> dict:
+    """Issue a JWT and return the full auth session (token + user fields)."""
     expire = datetime.now(timezone.utc) + timedelta(
         minutes=settings.ACCESS_TOKEN_EXPIRE
     )
     payload = {
         "user_id": user_id,
         "role": role,
+        "email": email,
         "exp": expire,
     }
     token = jwt.encode(payload, settings.SECERET_KEY, algorithm=settings.ALGORITHM)
-    return {"token": token, "type": "bearer"}
+    return {
+        "token": token,
+        "type": "bearer",
+        "user_id": user_id,
+        "role": role,
+        "email": email,
+    }
 
 
 def decode_access_token(token: str) -> dict:
@@ -45,7 +53,11 @@ def get_current_user(
     if not user_id or not role:
         raise HTTPException(status_code=401, detail="Invalid token payload")
 
-    return {"user_id": user_id, "role": role}
+    return {
+        "user_id": user_id,
+        "role": role,
+        "email": payload.get("email"),
+    }
 
 
 def require_role(*allowed_roles: str):

@@ -34,6 +34,8 @@ export type ChatResponse = {
   response: string;
   thread_id: string;
   sources: Source[];
+  run_id?: string | null;
+  trace_url?: string | null;
 };
 
 export type CurrentUser = {
@@ -42,9 +44,13 @@ export type CurrentUser = {
   email?: string | null;
 };
 
-export type AuthResult = {
-  email: string;
+/** Full auth session returned by /login and /createuser. */
+export type AuthSession = {
+  token: string;
+  type: string;
+  user_id: string;
   role: string;
+  email: string;
 };
 
 async function readError(res: Response, fallback: string): Promise<string> {
@@ -53,10 +59,22 @@ async function readError(res: Response, fallback: string): Promise<string> {
   return fallback;
 }
 
+function sessionFromPayload(data: AuthSession): { token: string; user: CurrentUser } {
+  setToken(data.token);
+  return {
+    token: data.token,
+    user: {
+      user_id: data.user_id,
+      role: data.role,
+      email: data.email,
+    },
+  };
+}
+
 export async function signup(
   email: string,
   password: string,
-): Promise<AuthResult> {
+): Promise<{ token: string; user: CurrentUser }> {
   const res = await fetch(`${API_URL}/createuser`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -65,13 +83,13 @@ export async function signup(
   if (!res.ok) {
     throw new Error(await readError(res, "Could not create account"));
   }
-  return res.json();
+  return sessionFromPayload(await res.json());
 }
 
 export async function login(
   email: string,
   password: string,
-): Promise<string> {
+): Promise<{ token: string; user: CurrentUser }> {
   const res = await fetch(`${API_URL}/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -80,9 +98,7 @@ export async function login(
   if (!res.ok) {
     throw new Error(await readError(res, "Invalid email or password"));
   }
-  const data = await res.json();
-  setToken(data.token);
-  return data.token;
+  return sessionFromPayload(await res.json());
 }
 
 export async function fetchMe(): Promise<CurrentUser | null> {

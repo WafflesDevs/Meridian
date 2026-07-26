@@ -59,4 +59,6 @@ def chat(
         response=result.answer,
         thread_id=thread_id,
         sources=result.sources,
+        run_id=result.run_id,
+        trace_url=result.trace_url,
     )

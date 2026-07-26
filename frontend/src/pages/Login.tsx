@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Brand } from "../components/Brand";
 import { useAuth } from "../auth/AuthContext";
+import { checkHealth } from "../api";
 
 type Mode = "login" | "signup";
 
@@ -20,6 +21,11 @@ export function Login() {
   const location = useLocation();
   const from =
     (location.state as LocationState | null)?.from?.pathname ?? "/chat";
+
+  // Wake a cold Render free-tier API while the user types credentials.
+  useEffect(() => {
+    void checkHealth();
+  }, []);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();

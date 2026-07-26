@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, status, Depends, Request, Response
 from slowapi.util import get_remote_address
 
 from app.core.rag import get_supabase
-from app.schemas.schemas import Createuser, ReturnCreate, LoginUser, TokenReturn, CurrentUser
+from app.schemas.schemas import Createuser, LoginUser, TokenReturn, CurrentUser
 from app.core.utils import hash_password, verify_password
 from app.core import oauth2
 from app.core.oauth2 import get_current_user
@@ -16,7 +16,7 @@ def get_db():
     return get_supabase()
 
 
-@router.post("/createuser", response_model=ReturnCreate, status_code=status.HTTP_201_CREATED)
+@router.post("/createuser", response_model=TokenReturn, status_code=status.HTTP_201_CREATED)
 @limiter.limit(settings.AUTH_RATE_LIMIT, key_func=get_remote_address)
 def create_user(
     request: Request, response: Response, info: Createuser, db=Depends(get_db)
@@ -35,7 +35,10 @@ def create_user(
         "role": "Explorer",
     }).execute()
 
-    return insert.data[0]
+    row = insert.data[0]
+    return oauth2.create_access_token(
+        str(row["id"]), row.get("role") or "Explorer", row["email"]
+    )
 
 
 @router.post("/login", status_code=status.HTTP_200_OK, response_model=TokenReturn)
@@ -56,22 +59,27 @@ def login(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid Login",
         )
-    return oauth2.create_access_token(str(user["id"]), user["role"])
+    return oauth2.create_access_token(
+        str(user["id"]), user["role"], user["email"]
+    )
 
 
 @router.get("/me", response_model=CurrentUser, status_code=status.HTTP_200_OK)
 def me(user: dict = Depends(get_current_user), db=Depends(get_db)):
-    email = None
-    try:
-        res = (
-            db.table("users")
-            .select("email")
-            .eq("id", user["user_id"])
-            .limit(1)
-            .execute()
-        )
-        if res.data:
-            email = res.data[0].get("email")
-    except Exception:
-        email = None
+    # Prefer email already embedded in the JWT (new tokens); fall back to
+    # Supabase for older tokens that only carry user_id + role.
+    email = user.get("email")
+    if not email:
+        try:
+            res = (
+                db.table("users")
+                .select("email")
+                .eq("id", user["user_id"])
+                .limit(1)
+                .execute()
+            )
+            if res.data:
+                email = res.data[0].get("email")
+        except Exception:
+            email = None
     return CurrentUser(user_id=user["user_id"], role=user["role"], email=email)

@@ -24,6 +24,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Session restore on refresh — still uses /me (OK; not on the login path).
   useEffect(() => {
     let cancelled = false;
     if (!getToken()) {
@@ -43,16 +44,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   async function login(email: string, password: string) {
-    await apiLogin(email, password);
-    const me = await fetchMe();
+    const { user: me } = await apiLogin(email, password);
     setUser(me);
   }
 
   async function signup(email: string, password: string) {
-    await apiSignup(email, password);
-    // Auto-login right after account creation.
-    await apiLogin(email, password);
-    const me = await fetchMe();
+    // Single round-trip: /createuser now returns a JWT + user session.
+    const { user: me } = await apiSignup(email, password);
     setUser(me);
   }
 

@@ -9,6 +9,8 @@ export type ChatMessage = {
   role: "user" | "assistant";
   content: string;
   sources?: Source[];
+  run_id?: string | null;
+  trace_url?: string | null;
 };
 
 export type SavedChat = {
