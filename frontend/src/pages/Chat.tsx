@@ -288,8 +288,6 @@ export function Chat() {
         role: "assistant",
         content: data.response,
         sources: data.sources ?? [],
-        run_id: data.run_id ?? null,
-        trace_url: data.trace_url ?? null,
       };
       const withAssistant: SavedChat = {
         ...withUser,
@@ -598,16 +596,6 @@ export function Chat() {
                           </span>
                         ))}
                       </div>
-                    ) : null}
-                    {msg.role === "assistant" && msg.trace_url ? (
-                      <a
-                        className="trace-link"
-                        href={msg.trace_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        View trace
-                      </a>
                     ) : null}
                   </div>
                 </div>

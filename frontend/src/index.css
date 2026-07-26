@@ -3059,22 +3059,6 @@ button {
   word-break: break-word;
 }
 
-.trace-link {
-  display: inline-block;
-  margin-top: 0.45rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: var(--muted);
-  text-decoration: underline;
-  text-underline-offset: 0.15em;
-  transition: color 0.2s ease;
-}
-
-.trace-link:hover {
-  color: var(--sea-deep);
-}
-
 .clinic-composer {
   border-top: 1px solid var(--line);
   background:

@@ -34,8 +34,6 @@ export type ChatResponse = {
   response: string;
   thread_id: string;
   sources: Source[];
-  run_id?: string | null;
-  trace_url?: string | null;
 };
 
 export type CurrentUser = {
