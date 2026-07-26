@@ -31,8 +31,10 @@ services:
         generateValue: true
       - key: ACCESS_TOKEN_EXPIRE
         value: "60"
+      # Tracing only actually enables when LANGCHAIN_API_KEY is also set
+      # (see app/core/config.py). Flip this off in the dashboard if unwanted.
       - key: LANGCHAIN_TRACING_V2
-        value: "false"
+        value: "true"
       - key: LANGCHAIN_API_KEY
         sync: false
       - key: LANGCHAIN_PROJECT

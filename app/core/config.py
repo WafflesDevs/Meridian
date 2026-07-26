@@ -69,12 +69,36 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
+
+def _export_langsmith_env() -> None:
+    """Push tracing flags into os.environ and bust langsmith's env-var cache.
+
+    langsmith.utils.get_env_var is lru_cached. If anything probes TRACING_V2
+    before we export (common with langchain imports), a stale ''/false sticks
+    forever and @traceable / trace() become no-ops — so chat never gets a
+    run_id / View-trace link even when Settings say tracing is on.
+    """
+    if settings.LANGCHAIN_TRACING_V2 and settings.LANGCHAIN_API_KEY:
+        os.environ["LANGCHAIN_TRACING_V2"] = "true"
+        os.environ["LANGSMITH_TRACING"] = "true"
+        os.environ["LANGCHAIN_API_KEY"] = settings.LANGCHAIN_API_KEY
+        os.environ["LANGSMITH_API_KEY"] = settings.LANGCHAIN_API_KEY
+        os.environ["LANGCHAIN_PROJECT"] = settings.LANGCHAIN_PROJECT
+        os.environ["LANGSMITH_PROJECT"] = settings.LANGCHAIN_PROJECT
+    else:
+        os.environ["LANGCHAIN_TRACING_V2"] = "false"
+        os.environ["LANGSMITH_TRACING"] = "false"
+
+    try:
+        from langsmith.utils import get_env_var, get_tracer_project
+
+        get_env_var.cache_clear()
+        get_tracer_project.cache_clear()
+    except Exception:
+        pass
+
+
 # LangSmith tracing only activates when a key is actually present. Without this,
 # a stray LANGCHAIN_TRACING_V2=true with no key can make langsmith attempt (and
 # retry) network calls on every request.
-if settings.LANGCHAIN_TRACING_V2 and settings.LANGCHAIN_API_KEY:
-    os.environ["LANGCHAIN_TRACING_V2"] = "true"
-    os.environ["LANGCHAIN_API_KEY"] = settings.LANGCHAIN_API_KEY
-    os.environ["LANGCHAIN_PROJECT"] = settings.LANGCHAIN_PROJECT
-else:
-    os.environ["LANGCHAIN_TRACING_V2"] = "false"
+_export_langsmith_env()

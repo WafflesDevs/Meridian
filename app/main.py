@@ -1,9 +1,11 @@
 from fastapi import FastAPI
 from slowapi.errors import RateLimitExceeded
 
-from app.routers import chat, sources, health, users
+# Import settings first so LANGCHAIN_* / LANGSMITH_* hit os.environ (and
+# langsmith's get_env_var cache is cleared) before routers pull in langchain.
 from app.core.config import settings
 from app.core.ratelimit import limiter, rate_limit_exceeded_handler
+from app.routers import chat, health, sources, users
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="Meridian API")

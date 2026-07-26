@@ -3,10 +3,15 @@
 import contextvars
 import re
 import time
+import uuid
 from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+
+# Settings first: export LANGCHAIN_* before langsmith caches get_env_var().
+from app.core.config import settings
+from app.core.memory import format_history
 
 from dotenv import load_dotenv
 from langchain_classic.agents import AgentExecutor, create_tool_calling_agent
@@ -19,11 +24,8 @@ from langchain_core.vectorstores import VectorStoreRetriever
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langsmith import traceable
-from langsmith.run_helpers import get_current_run_tree
+from langsmith.run_helpers import trace
 from supabase import Client, create_client
-
-from app.core.config import settings
-from app.core.memory import format_history
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 PDF_FOLDER = PROJECT_ROOT / "data"
@@ -79,53 +81,18 @@ class RagResult:
     trace_url: str | None = None
 
 
-# Cached LangSmith org/project UUIDs so we don't hit the LangSmith API on
-# every chat just to build a trace deep-link.
-_ls_tenant_id: str | None = None
-_ls_project_id: str | None = None
+# Peek URLs are intentional: they work for any logged-in LangSmith user who
+# can see the run, and avoid a flaky org/project UUID lookup on the chat path.
+_PEEK_TRACE_URL = "https://smith.langchain.com/?peek={run_id}"
 
 
 def _tracing_enabled() -> bool:
     return bool(settings.LANGCHAIN_TRACING_V2 and settings.LANGCHAIN_API_KEY)
 
 
-def _langsmith_trace_url(run_id: str) -> str | None:
-    """Build a smith.langchain.com deep-link for a run, or None on failure."""
-    global _ls_tenant_id, _ls_project_id
-    if not _tracing_enabled():
-        return None
-    try:
-        from langsmith import Client
-
-        client = Client()
-        if _ls_tenant_id is None:
-            _ls_tenant_id = str(client._get_tenant_id())
-        if _ls_project_id is None:
-            project = client.read_project(project_name=settings.LANGCHAIN_PROJECT)
-            _ls_project_id = str(project.id)
-        host = getattr(client, "_host_url", None) or "https://smith.langchain.com"
-        return (
-            f"{host}/o/{_ls_tenant_id}/projects/p/{_ls_project_id}/"
-            f"r/{run_id}?poll=true"
-        )
-    except Exception:
-        # Logged-in LangSmith users can still open a run via peek= when the
-        # project UUID lookup fails (offline, bad key, etc.).
-        return f"https://smith.langchain.com/?peek={run_id}"
-
-
-def _capture_trace() -> tuple[str | None, str | None]:
-    """Read the current @traceable run id + URL; never raises."""
-    if not _tracing_enabled():
-        return None, None
-    try:
-        tree = get_current_run_tree()
-        if tree is None or getattr(tree, "id", None) is None:
-            return None, None
-        run_id = str(tree.id)
-        return run_id, _langsmith_trace_url(run_id)
-    except Exception:
-        return None, None
+def _langsmith_trace_url(run_id: str) -> str:
+    """Build a reliable LangSmith link for a run (peek URL)."""
+    return _PEEK_TRACE_URL.format(run_id=run_id)
 
 
 def _clean_source_name(filename: str) -> str:
@@ -479,31 +446,57 @@ def get_agent_executor() -> AgentExecutor:
     )
 
 
-@traceable(name="rag_answer")
+def _invoke_agent(
+    question: str,
+    chat_history: list[dict[str, str]] | None,
+) -> tuple[str, list[Document]]:
+    result = get_agent_executor().invoke(
+        {
+            "input": question,
+            "chat_history": format_history(chat_history or []),
+        }
+    )
+    return result["output"], list(_retrieved_sources.get() or [])
+
+
 def rag_answer(
     question: str,
-    chat_history: list[dict[str, str]] | None = None) -> RagResult:
+    chat_history: list[dict[str, str]] | None = None,
+) -> RagResult:
+    """Answer a question; attach a LangSmith View-trace URL when tracing is on.
+
+    Uses an explicit `trace(run_id=...)` span (not get_current_run_tree after
+    the fact) so the run id is known even if nested LangChain callbacks shuffle
+    the active run tree.
+    """
     token = _retrieved_sources.set([])
-    run_id: str | None = None
-    trace_url: str | None = None
     try:
-        result = get_agent_executor().invoke(
-            {
-                "input": question,
-                "chat_history": format_history(chat_history or []),
-            }
-        )
-        retrieved = list(_retrieved_sources.get() or [])
-        run_id, trace_url = _capture_trace()
+        if _tracing_enabled():
+            run_id = str(uuid.uuid4())
+            with trace(
+                name="rag_answer",
+                run_type="chain",
+                run_id=run_id,
+                inputs={"question": question},
+                project_name=settings.LANGCHAIN_PROJECT,
+            ) as run_tree:
+                answer, retrieved = _invoke_agent(question, chat_history)
+                sources = collect_sources(retrieved)
+                try:
+                    run_tree.end(outputs={"answer": answer})
+                except Exception:
+                    pass
+                return RagResult(
+                    answer=answer,
+                    sources=sources,
+                    run_id=run_id,
+                    trace_url=_langsmith_trace_url(run_id),
+                )
+
+        answer, retrieved = _invoke_agent(question, chat_history)
+        return RagResult(answer=answer, sources=collect_sources(retrieved))
     finally:
         _retrieved_sources.reset(token)
-
-    return RagResult(
-        answer=result["output"],
-        sources=collect_sources(retrieved),
-        run_id=run_id,
-        trace_url=trace_url,
-    )
 
 
 def main() -> None:
